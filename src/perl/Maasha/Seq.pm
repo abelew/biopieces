@@ -30,7 +30,9 @@ package Maasha::Seq;
 
 use warnings;
 use strict;
-use POSIX qw( islower );
+## POSIX no longer has islower() and a few other functions.
+use POSIX;
+##use POSIX qw( islower );
 use Maasha::Common;
 use Data::Dumper;
 use IPC::Open2;
@@ -91,20 +93,20 @@ sub wrap
     chomp ${ $strref };
 }
 
-                                    
-sub dna_revcomp 
+
+sub dna_revcomp
 {
     # Niels Larsen
     # modified Martin A. Hansen, March 2005.
 
     # Returns the reverse complement of a dna sequence with preservation of case
-    # according to this mapping, 
+    # according to this mapping,
     #
     # AGCUTRYWSMKHDVBNagcutrywsmkhdvbn
     # TCGAAYRWSKMDHBVNtcgaayrwskmdhbvn
-     
+
     my ( $seq,   # seq
-       ) = @_;   
+       ) = @_;
 
     # returns string
 
@@ -122,7 +124,7 @@ sub rna_revcomp
     # modified Martin A. Hansen, March 2005.
 
     # Returns the complement of a rna sequence with preservation of case
-    # according to this mapping, 
+    # according to this mapping,
     #
     # AGCUTRYWSMKHDVBNagcutrywsmkhdvbn
     # UCGAAYRWSKMDHBVNucgaayrwskmdhbvn
@@ -138,19 +140,19 @@ sub rna_revcomp
 }
 
 
-sub dna_comp 
+sub dna_comp
 {
     # Niels Larsen
     # modified Martin A. Hansen, March 2005.
 
     # Returns the reverse complement of a dna sequence with preservation of case
-    # according to this mapping, 
+    # according to this mapping,
     #
     # AGCUTRYWSMKHDVBNagcutrywsmkhdvbn
     # TCGAAYRWSKMDHBVNtcgaayrwskmdhbvn
-     
+
     my ( $seqref,   # seqref
-       ) = @_;   
+       ) = @_;
 
     # Returns nothing.
 
@@ -164,7 +166,7 @@ sub rna_comp
     # modified Martin A. Hansen, March 2005.
 
     # Returns the complement of a rna sequence with preservation of case
-    # according to this mapping, 
+    # according to this mapping,
     #
     # AGCUTRYWSMKHDVBNagcutrywsmkhdvbn
     # UCGAAYRWSKMDHBVNucgaayrwskmdhbvn
@@ -472,7 +474,7 @@ sub translate
         last if not length $codon == 3;
 
         $pep .= codon2aa( $codon );
-    
+
         $pos += 3;
     }
 
@@ -551,7 +553,7 @@ sub fold_struct_contrastruct
     while ( $line = <$fh> )
     {
         chomp $line;
-    
+
         $struct = $line;
     }
 
@@ -564,7 +566,7 @@ sub fold_struct_contrastruct
     while ( $line = <$fh> )
     {
         chomp $line;
-    
+
         push @AoA, [ split " ", $line ];
     }
 
@@ -596,7 +598,7 @@ sub base_pair_melting_temp
 
     my ( $bp,   # basepair string
        ) = @_;
-    
+
     # Returns integer
 
     my ( %melt_hash );
@@ -703,7 +705,7 @@ sub seq2oligos_uniq
 
     # Given a sequence and a wordsize,
     # breaks the sequence into overlapping
-    # oligos of that wordsize and return 
+    # oligos of that wordsize and return
     # only unique words.
 
     my ( $seq,       # sequence reference
@@ -769,7 +771,7 @@ sub seq_generate
     # Returns a string
 
     my ( $alph_len, $i, $seq );
-    
+
     $alph_len = scalar @{ $alph };
 
     for ( $i = 0; $i < $len; $i++ ) {
@@ -834,7 +836,7 @@ sub seq_mutate
 {
     # Martin A. Hansen, June 2009.
 
-    # Introduces a given number of random mutations in a 
+    # Introduces a given number of random mutations in a
     # given sequence of a specified alphabet.
 
     my ( $seq,         # sequence to mutate
@@ -857,7 +859,7 @@ sub seq_mutate
             substr $seq, $pos, 1, res_mutate( substr( $seq , $pos, 1 ), $alph );
 
             $lookup_hash{ $pos } = 1;
-        
+
             $i++;
         }
     }
@@ -887,7 +889,13 @@ sub res_mutate
         $new = $alph->[ int( rand( $alph_len ) ) ];
     }
 
-    return POSIX::islower( $res ) ? lc $new : uc $new;
+    if ( $res eq uc( $res ) ) {
+        return $res;
+    } else {
+        return( lc( $res ) );
+    }
+    ## Ibid, POSIX no longer provides islower().
+    ## return POSIX::islower( $res ) ? lc $new : uc $new;
 }
 
 
@@ -1075,7 +1083,7 @@ sub seqlogo_calc
     for ( $i = 0; $i < $logo_len; $i++ )
     {
         undef %char_hash;
-        
+
         map { $char_hash{ uc substr( $_->[ 1 ], $i, 1 ) }++ } @{ $entries };
 
         delete $char_hash{ "-" };
@@ -1099,11 +1107,11 @@ sub seqlogo_calc
 sub seqlogo_calc_bit_height
 {
     # Martin A. Hansen, January 2007.
-    
+
     # calculates the bit height using Shannon's famous
     # general formula for uncertainty as documentet:
     # http://www.ccrnp.ncifcrf.gov/~toms/paper/hawaii/latex/node5.html
-    
+
     my ( $char_hash,   # hashref with chars and frequencies
          $tot,         # total number of chars
        ) = @_;
@@ -1218,7 +1226,7 @@ sub color_pep
 sub color_nuc
 {
     # Martin A. Hansen, October 2005.
-    
+
     # color scheme for nucleotides as defined in Mview.
     # given a char returns the appropriate color
     # according to physical/chemical proterties.
@@ -1337,7 +1345,7 @@ sub color_palette
     } else {
         print STDERR qq(WARNING: color "$color" not found in palette!\n);
     }
-}       
+}
 
 
 sub color_contrast
@@ -1345,7 +1353,7 @@ sub color_contrast
     # Martin A. Hansen, October 2005.
 
     # Hash table with contrast colors to be used for frontground
-    # text on a given background color. 
+    # text on a given background color.
 
     my ( $color,    # background color
        ) = @_;
@@ -1429,7 +1437,7 @@ sub color_contrast
     } else {
         print STDERR qq(WARNING: color "$color" not found in palette!\n);
     }
-}       
+}
 
 
 sub seq_word_pack
@@ -1444,7 +1452,7 @@ sub seq_word_pack
     # Returns integer.
 
     my ( %hash, $bin, $word_size, $pad );
-    
+
     %hash = (
         'A' => '000',
         'T' => '001',
@@ -1467,7 +1475,7 @@ sub seq_word_pack
         $pad = ( ( int $pad + 1 ) * 8 ) - 3 * $word_size;
 
         $bin .= pack "B$pad", 0 x $pad;
-    }   
+    }
 
     return $bin;
 }
@@ -1537,14 +1545,14 @@ sub find_adaptor
     while ( $i < $tag_len - ( $max_match + $max_mismatch ) + 1 )
     {
         $j = 0;
-        
+
         while ( $j < $adaptor_len - ( $max_match + $max_mismatch ) + 1 )
         {
             return $i if check_diag( $adaptor, $tag, $adaptor_len, $tag_len, $j, $i, $max_match, $max_mismatch );
 
             $j++
         }
-    
+
         $i++;
     }
 
@@ -1556,7 +1564,7 @@ sub check_diag
 {
     # Martin A. Hansen & Selene Fernandez, August 2008
 
-    # Checks the diagonal starting at a given coordinate 
+    # Checks the diagonal starting at a given coordinate
     # of a search space constituted by an adaptor and a tag sequence.
     # Residues in the diagonal are compared between the sequences allowing
     # for a given number of mismatches. We terminate when search space is
@@ -1593,13 +1601,13 @@ sub check_diag
 
             return 0 if $mismatch > $max_mismatch;
         }
-    
+
         $adaptor_beg++;
         $tag_beg++;
     }
 
     return 0;
 }
-        
+
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
